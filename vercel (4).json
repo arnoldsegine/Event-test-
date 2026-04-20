@@ -1,0 +1,1 @@
+{"version":2,"builds":[{"src":"index.html","use":"@vercel/static"},{"src":"music.mp3","use":"@vercel/static"}],"routes":[{"src":"/music.mp3","dest":"/music.mp3"},{"src":"/(.*)","dest":"/index.html"}]}

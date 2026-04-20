@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arnold & Isaac – Add Your Memories</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,600;1,300;1,400&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+  :root {
+    --plum:  #2d1a24;
+    --plum2: #3b2130;
+    --cream: #f5ebe0;
+    --cream2:#ede0d4;
+    --gold:  #c9a85c;
+    --gold2: #e2c47a;
+    --blush: #d4837a;
+    --muted: #7a5c65;
+    --white: #ffffff;
+  }
+
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: 'Montserrat', sans-serif;
+    background: var(--cream);
+    color: var(--plum);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--plum);
+    padding: 20px 24px;
+    text-align: center;
+  }
+  .header-script {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic; font-size: 24px;
+    color: var(--gold); margin-bottom: 4px;
+  }
+  .header-date {
+    font-size: 10px; font-weight: 500;
+    letter-spacing: 3px; text-transform: uppercase;
+    color: rgba(255,255,255,0.4);
+  }
+
+  /* ── HERO ── */
+  .hero {
+    padding: 56px 24px 40px;
+    text-align: center;
+    background: var(--cream);
+  }
+  .eyebrow {
+    font-size: 10px; font-weight: 600;
+    letter-spacing: 4px; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 14px; display: block;
+  }
+  .hero-heading {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(34px, 8vw, 56px);
+    font-weight: 300; font-style: italic;
+    color: var(--plum); line-height: 1.15; margin-bottom: 16px;
+  }
+  .hero-sub {
+    font-size: 13px; font-weight: 300;
+    color: var(--muted); line-height: 1.8;
+    max-width: 380px; margin: 0 auto 20px;
+  }
+  .hero-tag {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic; font-size: 16px;
+    color: var(--blush); display: block;
+  }
+
+  /* ── UPLOAD ── */
+  .upload-section {
+    padding: 0 20px 52px;
+    background: var(--cream);
+  }
+  .drop-zone {
+    border: 1px dashed rgba(201,168,92,0.6);
+    border-radius: 16px;
+    padding: 44px 20px;
+    text-align: center;
+    cursor: pointer;
+    max-width: 440px;
+    margin: 0 auto;
+    background: var(--white);
+    transition: border-color 0.3s, background 0.3s;
+  }
+  .drop-zone:hover, .drop-zone.over {
+    border-color: var(--gold);
+    background: #fffaf5;
+  }
+  .drop-icon { font-size: 40px; margin-bottom: 14px; display: block; }
+  .drop-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px; font-style: italic;
+    color: var(--plum); margin-bottom: 8px;
+  }
+  .drop-sub {
+    font-size: 11px; font-weight: 300;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 24px;
+  }
+  .upload-btn {
+    background: var(--plum); color: var(--gold);
+    border: none; padding: 14px 36px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 3px; text-transform: uppercase;
+    cursor: pointer; border-radius: 2px;
+  }
+  .upload-btn:hover { opacity: 0.85; }
+
+  .prog-wrap {
+    width: 100%; max-width: 260px;
+    height: 5px; background: #e8d8cc;
+    border-radius: 3px; margin: 0 auto;
+    overflow: hidden; display: none;
+  }
+  .prog-bar { height: 100%; background: var(--gold); border-radius: 3px; width: 0; transition: width 0.3s; }
+  .prog-label { font-size: 11px; color: var(--muted); margin-top: 10px; display: none; }
+
+  /* ── GALLERY ── */
+  .gallery-section {
+    background: var(--cream2);
+    padding: 56px 20px 64px;
+    text-align: center;
+  }
+  .sub-heading {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(24px, 5vw, 36px);
+    font-style: italic; font-weight: 300;
+    color: var(--plum); margin-bottom: 32px;
+  }
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  .g-thumb {
+    aspect-ratio: 1; border-radius: 8px;
+    overflow: hidden; cursor: pointer;
+    position: relative; background: #e8d8cc;
+    transition: transform 0.2s;
+  }
+  .g-thumb:hover { transform: scale(1.03); }
+  .g-thumb img, .g-thumb video {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+  }
+  .video-play {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    background: rgba(45,26,36,0.7); color: var(--gold);
+    width: 32px; height: 32px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; pointer-events: none;
+  }
+  .empty-msg { font-size: 14px; font-style: italic; color: var(--muted); }
+
+  /* ── FOOTER ── */
+  footer {
+    background: var(--plum2);
+    padding: 40px 24px; text-align: center;
+  }
+  .footer-verse {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic; font-size: 14px;
+    color: #f5ebe0; max-width: 400px;
+    margin: 0 auto 10px; line-height: 1.7;
+  }
+  .footer-tag {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic; font-size: 14px; color: var(--blush);
+  }
+
+  /* ── LIGHTBOX ── */
+  .lightbox-bg {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.92);
+    align-items: center; justify-content: center;
+    z-index: 200;
+  }
+  .lightbox-bg.open { display: flex; }
+  .lightbox-inner { position: relative; max-width: 95vw; max-height: 90vh; }
+  .lightbox-inner img,
+  .lightbox-inner video { max-width: 95vw; max-height: 88vh; border-radius: 6px; display: block; }
+  .lb-close {
+    position: absolute; top: -40px; right: 0;
+    background: none; border: none;
+    color: #fff; font-size: 24px; cursor: pointer;
+  }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed; bottom: 28px; left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--plum); color: var(--gold);
+    padding: 13px 24px;
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 2px; text-transform: uppercase;
+    border: 1px solid rgba(201,168,92,0.3);
+    transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+    z-index: 300; pointer-events: none; white-space: nowrap;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header>
+  <p class="header-script">Arnold &amp; Isaac</p>
+  <p class="header-date">August 3, 2026 · Albania</p>
+</header>
+
+<!-- ── HERO ── -->
+<section class="hero">
+  <span class="eyebrow">You made it! 🎉</span>
+  <h1 class="hero-heading">Add your photos<br>&amp; videos</h1>
+  <p class="hero-sub">
+    Every memory you share goes straight into our gallery.
+    Thank you for being part of our day.
+  </p>
+  <span class="hero-tag">#AandISoInLove</span>
+</section>
+
+<!-- ── UPLOAD ── -->
+<section class="upload-section">
+  <div class="drop-zone" id="dropZone">
+    <input type="file" id="fileInput" accept="image/*,video/*" multiple capture="environment" style="display:none">
+    <span class="drop-icon">🌸</span>
+    <h3 class="drop-title">Upload photos &amp; videos</h3>
+    <p class="drop-sub">Tap to choose from your camera roll</p>
+    <div class="prog-wrap" id="progWrap"><div class="prog-bar" id="progBar"></div></div>
+    <p class="prog-label" id="progLabel"></p>
+    <button class="upload-btn" id="uploadBtn">Choose Files</button>
+  </div>
+</section>
+
+<!-- ── GALLERY ── -->
+<section class="gallery-section">
+  <span class="eyebrow">Everyone's Memories</span>
+  <h2 class="sub-heading">See what's been shared</h2>
+  <div class="gallery-grid" id="galleryGrid">
+    <p class="empty-msg" id="emptyMsg" style="grid-column:1/-1">Be the first to add a memory ✨</p>
+  </div>
+</section>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <p class="footer-verse">"Two hearts in love, aligned values, God at the center."</p>
+  <p class="footer-tag">#AandISoInLove</p>
+</footer>
+
+<!-- ── LIGHTBOX ── -->
+<div class="lightbox-bg" id="lightbox">
+  <div class="lightbox-inner">
+    <button class="lb-close" onclick="closeLightbox()">✕</button>
+    <div id="lightboxContent"></div>
+  </div>
+</div>
+
+<!-- ── TOAST ── -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ════════════════════════════════════════════
+// ⚠️  REPLACE WITH YOUR SUPABASE KEYS
+// ════════════════════════════════════════════
+const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
+// ════════════════════════════════════════════
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let allUploads = [];
+
+async function loadGallery() {
+  const { data } = await sb.from('uploads').select('*').order('created_at', { ascending: false });
+  if (data) { allUploads = data; renderGallery(data); }
+}
+
+function renderGallery(items) {
+  const grid  = document.getElementById('galleryGrid');
+  const empty = document.getElementById('emptyMsg');
+  if (!items.length) { grid.innerHTML = ''; grid.appendChild(empty); return; }
+  grid.innerHTML = '';
+  items.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'g-thumb';
+    div.onclick = () => openLightbox(item);
+    div.innerHTML = item.type === 'video'
+      ? `<video src="${item.url}" muted playsinline preload="metadata"></video><div class="video-play">▶</div>`
+      : `<img src="${item.url}" alt="Memory" loading="lazy">`;
+    grid.appendChild(div);
+  });
+}
+
+// Real-time
+sb.channel('share-changes')
+  .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'uploads' },
+    p => { allUploads = [p.new, ...allUploads]; renderGallery(allUploads); })
+  .subscribe();
+
+// Upload
+const dropZone  = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+
+dropZone.addEventListener('click',     () => fileInput.click());
+document.getElementById('uploadBtn').addEventListener('click', e => { e.stopPropagation(); fileInput.click(); });
+dropZone.addEventListener('dragover',  e => { e.preventDefault(); dropZone.classList.add('over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('over'));
+dropZone.addEventListener('drop',      e => { e.preventDefault(); dropZone.classList.remove('over'); uploadFiles(e.dataTransfer.files); });
+fileInput.addEventListener('change',   () => uploadFiles(fileInput.files));
+
+async function uploadFiles(files) {
+  if (!files?.length) return;
+  const btn   = document.getElementById('uploadBtn');
+  const wrap  = document.getElementById('progWrap');
+  const bar   = document.getElementById('progBar');
+  const label = document.getElementById('progLabel');
+  btn.style.display   = 'none';
+  wrap.style.display  = 'block';
+  label.style.display = 'block';
+
+  for (let i = 0; i < files.length; i++) {
+    const file    = files[i];
+    const isVideo = file.type.startsWith('video/');
+    const ext     = file.name.split('.').pop();
+    const path    = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+
+    const { error } = await sb.storage.from('wedding-gallery').upload(path, file, { cacheControl:'3600', upsert:false });
+    if (error) { showToast('Upload failed, please try again'); continue; }
+
+    const { data: { publicUrl } } = sb.storage.from('wedding-gallery').getPublicUrl(path);
+    await sb.from('uploads').insert({ url: publicUrl, type: isVideo ? 'video' : 'image' });
+
+    const pct = Math.round(((i + 1) / files.length) * 100);
+    bar.style.width      = pct + '%';
+    label.textContent    = `Uploading... ${pct}%`;
+  }
+
+  btn.style.display   = 'inline-block';
+  wrap.style.display  = 'none';
+  label.style.display = 'none';
+  showToast('✦  Thank you! Your memory has been added');
+  loadGallery();
+}
+
+function openLightbox(item) {
+  const lb = document.getElementById('lightbox');
+  document.getElementById('lightboxContent').innerHTML = item.type === 'video'
+    ? `<video src="${item.url}" controls autoplay style="max-width:95vw;max-height:88vh;border-radius:6px;display:block"></video>`
+    : `<img src="${item.url}" alt="Memory" style="max-width:95vw;max-height:88vh;border-radius:6px;display:block">`;
+  lb.classList.add('open');
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+  document.getElementById('lightboxContent').innerHTML = '';
+}
+document.getElementById('lightbox').addEventListener('click', function(e) {
+  if (e.target === this) closeLightbox();
+});
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+loadGallery();
+</script>
+</body>
+</html>
